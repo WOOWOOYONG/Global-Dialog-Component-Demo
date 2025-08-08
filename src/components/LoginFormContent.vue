@@ -27,21 +27,16 @@ const formRules = {
   ],
 }
 
-const handleSubmit = () => {
-  return new Promise<void>((resolve, reject) => {
-    loginFormRef.value
-      .validate((valid: boolean) => {
-        if (valid) {
-          resolve()
-        } else {
-          reject(new Error('表單驗證失敗'))
-        }
-      })
-      .catch((error: Error) => {
-        console.error('表單驗證錯誤:', error)
-        reject(error)
-      })
-  })
+const handleSubmit = async () => {
+  try {
+    const valid = await loginFormRef.value.validate()
+    if (!valid) {
+      throw new Error('表單驗證失敗')
+    }
+  } catch (error) {
+    console.error('表單驗證錯誤:', error)
+    throw error
+  }
 }
 
 defineExpose({
