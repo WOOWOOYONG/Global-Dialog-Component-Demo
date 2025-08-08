@@ -7,20 +7,41 @@ import type { InputInstance } from 'element-plus/es/components/index.mjs'
 const loginFormRef = ref()
 const firstInputRef = ref<InputInstance>()
 
-const email = ref('')
-const password = ref('')
+interface LoginFormModel {
+  email: string
+  password: string
+}
+const loginFormModel = ref<LoginFormModel>({
+  email: '',
+  password: '',
+})
+
+const formRules = {
+  email: [
+    { required: true, message: '請輸入 Email', trigger: 'blur' },
+    { type: 'email', message: '請輸入正確的 Email 格式', trigger: ['blur', 'change'] },
+  ],
+  password: [
+    { required: true, message: '請輸入密碼', trigger: 'blur' },
+    { min: 6, max: 20, message: '密碼長度應在 6 到 20 個字符之間', trigger: ['blur', 'change'] },
+  ],
+}
 
 const handleSubmit = () => {
-  loginFormRef.value?.validate((valid: boolean) => {
-    if (valid) {
-      console.log('Form is valid')
-    } else {
-      console.error('Form validation failed')
-      return false
-    }
+  return new Promise<void>((resolve, reject) => {
+    loginFormRef.value
+      .validate((valid: boolean) => {
+        if (valid) {
+          resolve()
+        } else {
+          reject(new Error('表單驗證失敗'))
+        }
+      })
+      .catch((error: Error) => {
+        console.error('表單驗證錯誤:', error)
+        reject(error)
+      })
   })
-  console.log('Username:', email.value)
-  console.log('Password:', password.value)
 }
 
 defineExpose({
@@ -35,12 +56,20 @@ onMounted(() => {
 
 <template>
   <div>
-    <el-form ref="loginFormRef" label-position="left" @submit.prevent="handleSubmit">
-      <el-form-item>
-        <el-input ref="firstInputRef" v-model="email" placeholder="請輸入 Email"></el-input>
+    <el-form ref="loginFormRef" :model="loginFormModel" :rules="formRules" label-position="left">
+      <el-form-item prop="email">
+        <el-input
+          ref="firstInputRef"
+          v-model="loginFormModel.email"
+          placeholder="請輸入 Email"
+        ></el-input>
       </el-form-item>
-      <el-form-item>
-        <el-input type="password" v-model="password" placeholder="請輸入密碼"></el-input>
+      <el-form-item prop="password">
+        <el-input
+          type="password"
+          v-model="loginFormModel.password"
+          placeholder="請輸入密碼"
+        ></el-input>
       </el-form-item>
     </el-form>
   </div>

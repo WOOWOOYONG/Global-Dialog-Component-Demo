@@ -2,16 +2,26 @@
 import LoginFormContent from '@/components/LoginFormContent.vue'
 import { CommonEvent } from '@/enums'
 import { eventEmitter } from '@/utils/event-emitter'
+import type { LoginFormExposed } from '@/types'
 import { ElButton } from 'element-plus'
-import { h } from 'vue'
+import { h, type ComponentPublicInstance } from 'vue'
 
-const openDialog = (options: { title?: string; onConfirm: () => void; onCancel?: () => void }) => {
+const openDialog = (options: {
+  title?: string
+  onConfirm: () => Promise<void>
+  onCancel?: () => void
+}) => {
+  let loginFormRef: (ComponentPublicInstance & LoginFormExposed) | null = null
+
   eventEmitter.emit(CommonEvent.OPEN_DIALOG, {
     title: options.title || 'Login',
     content: () =>
       h(LoginFormContent, {
-        onConfirm: () => {
-          options.onConfirm()
+        ref: (el: Element | ComponentPublicInstance | null) => {
+          loginFormRef = el as (ComponentPublicInstance & LoginFormExposed) | null
+        },
+        onConfirm: async () => {
+          await options.onConfirm()
           eventEmitter.emit(CommonEvent.CLOSE_DIALOG)
         },
         onCancel: () => {
@@ -36,9 +46,10 @@ const openDialog = (options: { title?: string; onConfirm: () => void; onCancel?:
             ElButton,
             {
               type: 'primary',
-              onClick: () => {
+              onClick: async () => {
+                await loginFormRef?.handleSubmit()
+                await options.onConfirm()
                 eventEmitter.emit(CommonEvent.CLOSE_DIALOG)
-                options.onConfirm()
               },
             },
             { default: () => '確定' },
@@ -55,7 +66,7 @@ const openLoginDialog = () => {
   console.log('Opening login dialog...')
   openDialog({
     title: '登入',
-    onConfirm: () => {
+    onConfirm: async () => {
       console.log('Login confirmed')
     },
     onCancel: () => {

@@ -15,3 +15,8 @@ export interface DialogConfig {
   >
   onClose?: () => void
 }
+
+export interface LoginFormExposed {
+  handleSubmit: () => Promise<void>
+  loginFormRef: unknown
+}
